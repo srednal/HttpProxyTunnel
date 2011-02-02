@@ -1,0 +1,76 @@
+<project name="httpproxytunnel" default="build">
+
+    <property name="mina" value="mina-1.1.7"/>
+    <property name="slf4j" value="slf4j-1.5.2"/>
+    <property name="mina-core.jar" location="../${mina}/mina-core-1.1.7.jar"/>
+    <property name="slf4j-api.jar" location="../${slf4j}/slf4j-api-1.5.2.jar"/>
+    <property name="slf4j-jdk.jar" location="../${slf4j}/slf4j-jdk14-1.5.2.jar"/>
+
+    <path id="classpath">
+        <fileset dir="lib" excludes="*-sources.jar"/>
+    </path>
+
+    <target name="clean">
+        <delete dir="buildout" quiet="true"/>
+        <delete file="httpproxytunnel.jar"/>
+    </target>
+
+    <target name="build" depends="compile,jar"/>
+
+    <target name="install" depends="build">
+        <copy file="httpproxytunnel.jar" todir="${user.home}/Library/Application Support/httpproxytunnel/"/>
+        <copy file="com.srednal.httpproxytunnel.plist" todir="${user.home}/Library/LaunchAgents/"/>
+        <exec executable="/bin/launchctl">
+            <arg value="stop"/>
+            <arg value="com.srednal.httpproxytunnel"/>
+        </exec>
+        <exec executable="/bin/launchctl">
+            <arg value="start"/>
+            <arg value="com.srednal.httpproxytunnel"/>
+        </exec>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="buildout"/>
+        <javac srcdir="src" classpathref="classpath" destdir="buildout"/>
+    </target>
+
+    <patternset id="src.excludes">
+        <exclude name="lib/**"/>
+        <exclude name="httpproxytunnel.jar"/>
+        <exclude name="buildout/**"/>
+        <exclude name="bin/**"/> <!-- eclipse -->
+    </patternset>
+
+    <target name="srczip">
+        <zip destfile="buildout/src.zip" basedir=".">
+            <patternset refid="src.excludes"/>
+        </zip>
+    </target>
+
+    <target name="jar" depends="srczip">
+        <!-- dependency jars unjar'ed -->
+        <unjar dest="buildout">
+            <path refid="classpath"/>
+            <patternset excludes="META-INF/**"/>
+        </unjar>
+        <!-- licenses and example properties -->
+        <copy todir="buildout">
+            <fileset dir=".">
+                <include name="*.txt"/>
+                <include name="*.properties"/>
+                <include name="*.plist"/>
+            </fileset>
+        </copy>
+        <jar basedir="buildout" destfile="httpproxytunnel.jar" duplicate="fail">
+            <manifest>
+                <attribute name="Main-Class" value="com.srednal.httpproxytunnel.Main"/>
+                <attribute name="Implementation-Title" value="com.srednal.httpproxytunnel"/>
+                <attribute name="Implementation-Version" value="2.1"/>
+                <attribute name="Implementation-Vendor" value="Dave Landers &lt;dave@srednal.com&gt;"/>
+                <attribute name="Implementation-URL" value="http://dave.srednal.com/"/>
+            </manifest>
+        </jar>
+    </target>
+
+</project>

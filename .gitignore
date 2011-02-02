@@ -1,0 +1,5 @@
+# ant build
+buildout/
+# eclipse build
+bin/
+httpproxytunnel.jar

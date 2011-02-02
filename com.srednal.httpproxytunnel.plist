@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.srednal.httpproxytunnel</string>
+    <key>Disabled</key>
+    <false/>
+    <key>RunAtLoad</key>
+	<true/>
+	<key>OnDemand</key>
+	<false/>
+    <key>EnableGlobbing</key>
+    <true/>
+    <key>ProgramArguments</key>
+	<array>
+		<string>/usr/bin/java</string>
+		<string>-jar</string>
+		<string>~/Library/Application Support/httpproxytunnel/httpproxytunnel.jar</string>
+	</array>
+</dict>
+</plist>

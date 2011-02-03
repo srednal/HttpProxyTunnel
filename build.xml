@@ -1,23 +1,20 @@
-<project name="httpproxytunnel" default="build">
+<project name="httpproxytunnel" default="build"  xmlns:ivy="antlib:org.apache.ivy.ant">
 
-    <property name="mina" value="mina-1.1.7"/>
-    <property name="slf4j" value="slf4j-1.5.2"/>
-    <property name="mina-core.jar" location="../${mina}/mina-core-1.1.7.jar"/>
-    <property name="slf4j-api.jar" location="../${slf4j}/slf4j-api-1.5.2.jar"/>
-    <property name="slf4j-jdk.jar" location="../${slf4j}/slf4j-jdk14-1.5.2.jar"/>
-
-    <path id="classpath">
-        <fileset dir="lib" excludes="*-sources.jar"/>
-    </path>
+    <!-- Ivy version -->
+    <property name="ivy.install.version" value="2.2.0" />
+    <property name="ivy.jar.dir" value="${basedir}/ivy" />
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
 
     <target name="clean">
         <delete dir="buildout" quiet="true"/>
         <delete file="httpproxytunnel.jar"/>
     </target>
 
+    <target name="clean-all" depends="clean,clean-ivy,clean-cache" description="clean everything (build,ivy,cache)"/>
+
     <target name="build" depends="compile,jar"/>
 
-    <target name="install" depends="build">
+    <target name="install" depends="build" description="MacOS only:  install and [re]start via launchctl">
         <copy file="httpproxytunnel.jar" todir="${user.home}/Library/Application Support/httpproxytunnel/"/>
         <copy file="com.srednal.httpproxytunnel.plist" todir="${user.home}/Library/LaunchAgents/"/>
         <exec executable="/bin/launchctl">
@@ -30,13 +27,14 @@
         </exec>
     </target>
 
-    <target name="compile">
+    <target name="compile" depends="install-ivy">
+    	<ivy:cachepath pathid="classpath" conf="default"/>
+
         <mkdir dir="buildout"/>
-        <javac srcdir="src" classpathref="classpath" destdir="buildout"/>
+        <javac srcdir="src" classpathref="classpath" includeantruntime="false" destdir="buildout"/>
     </target>
 
     <patternset id="src.excludes">
-        <exclude name="lib/**"/>
         <exclude name="httpproxytunnel.jar"/>
         <exclude name="buildout/**"/>
         <exclude name="bin/**"/> <!-- eclipse -->
@@ -71,6 +69,35 @@
                 <attribute name="Implementation-URL" value="http://dave.srednal.com/"/>
             </manifest>
         </jar>
+    </target>
+
+	<!-- ivy download bootstrap -->
+
+    <target name="download-ivy">
+        <mkdir dir="${ivy.jar.dir}"/>
+        <!-- download Ivy from web site so that it can be used even without any special installation -->
+        <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+             dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+
+    <target name="install-ivy" depends="download-ivy" description="install ivy">
+        <!-- try to load ivy here from local ivy dir, in case the user has not already dropped
+              it into ant's lib dir (note that the latter copy will always take precedence).
+              We will not fail as long as local lib dir exists (it may be empty) and
+              ivy is in at least one of ant's lib dir or the local lib dir. -->
+        <path id="ivy.lib.path">
+            <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml"
+                  uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>
+
+    <target name="clean-ivy" description="clean the ivy installation">
+        <delete dir="${ivy.jar.dir}"/>
+    </target>
+
+    <target name="clean-cache" depends="install-ivy" description="clean the ivy cache">
+        <ivy:cleancache />
     </target>
 
 </project>

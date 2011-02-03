@@ -1,5 +1,7 @@
 # ant build
 buildout/
+httpproxytunnel.jar
 # eclipse build
 bin/
-httpproxytunnel.jar
+# ivy bootstrap
+ivy/
